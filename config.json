@@ -1,0 +1,11 @@
+{
+  "MYSQL_HOST":"test",
+  "MYSQL_USER":"test",
+  "MYSQL_PASSWORD":"test",
+  "MYSQL_DB": "test",
+  "TEST_MYSQL_HOST": "sql6.freemysqlhosting.net",
+  "TEST_MYSQL_USER": "sql6518897",
+  "TEST_MYSQL_PASSWORD":"92mkEvJg1L",
+  "TEST_MYSQL_DB":"sql6518897",
+  "TEST_MYSQL_PORT":"3306"
+}
