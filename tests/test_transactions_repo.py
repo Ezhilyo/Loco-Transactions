@@ -1,7 +1,5 @@
-import json
 import unittest
 import mysql
-import yaml
 from database.repo import TransactionsRepo
 
 import mysql.connector
@@ -12,14 +10,6 @@ db_config = get_config()
 
 
 class TestTransactionsRepo(unittest.TestCase):
-
-    # def __init__(self):
-    #     super().__init__()
-    #     self.transaction = TransactionsRepo(host=db_config["TEST_MYSQL_HOST"],
-    #                                         user_name=db_config["TEST_MYSQL_USER"],
-    #                                         password=db_config["TEST_MYSQL_PASSWORD"],
-    #                                         db_name=db_config["TEST_MYSQL_DB"],
-    #                                         port=db_config["TEST_MYSQL_PORT"])
 
     @classmethod
     def setUpClass(cls) -> None:
