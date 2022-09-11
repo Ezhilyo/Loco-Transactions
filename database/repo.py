@@ -5,7 +5,6 @@ class TransactionsRepo():
     def __init__(self, mysql_conn):
         self.mysql_conn = mysql_conn
         self._cursor = mysql_conn.connection.cursor()
-        self.connect()
     
     def _is_cyclic(self, transaction_id: int, parent_id: int):
         query=f"""
@@ -39,7 +38,7 @@ class TransactionsRepo():
     def update_transaction(self, transaction_id: int, amount: float, transaction_type: str, parent_id: int):
         if self._is_cylic(transaction_id=transaction_id, parent_id=parent_id):
             raise ValueError("Invalid parentId provided")
-        query = f"UPDATE Transactions(id, amount, transaction_type, parent_id) values({transaction_id, amount, transaction_type, parent_id})"
+        query = f"UPDATE Transactions set amount={amount}, transaction_type={transaction_type}, parent_id={parent_id}) where id={transaction_id}"
         try:
             self.mysql_conn.execute(query)
             self.mysql_conn.commit()
@@ -50,7 +49,8 @@ class TransactionsRepo():
     def get_transactions_by_type(self, transaction_type: str):
         query="SELECT transaction_id, amount, transaction_type, parent_id from Transactions where transaction_type={transaction_type}"
         try:
-            self.mysql_conn.execute(query)
+            self._cursor.execute(query)
+            return self._cursor.fetchall()
         except Exception as e:
             logger.exception(f"Error occurred while fetching data for transaction_type: {transaction_type} due to {e}")
             raise Exception("Error occurred")
@@ -59,7 +59,8 @@ class TransactionsRepo():
     def get_transactions_by_id(self, transaction_id: int):
         query="SELECT transaction_id, amount, transaction_type, parent_id from Transactions where id={transaction_id}"
         try:
-            self.mysql_conn.execute(query)
+            self._cursor.execute(query)
+            self._cursor.fetchall()
         except Exception as e:
             logger.exception(f"Error occurred while fetching data for transaction_id: {transaction_id} due to {e}")
             raise Exception("Error occurred")
@@ -75,7 +76,8 @@ class TransactionsRepo():
         """
 
         try:
-            self.mysql_conn.execute(query)
+            self._cursor.execute(query)
+            return self._cursor.fetchone().get('t_sum', 0)
         except Exception as e:
             logger.exception(f"Error occurred while fetching data for transaction_id: {transaction_id} due to {e}")
             raise Exception("Error occurred")
