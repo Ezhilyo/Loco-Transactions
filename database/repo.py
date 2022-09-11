@@ -2,10 +2,12 @@ from asyncio.log import logger
 
 
 class TransactionsRepo():
-    def __init__(self):
+    def __init__(self, mysql_conn):
+        self.mysql_conn = mysql_conn
+        self._cursor = mysql_conn.connection.cursor()
         self.connect()
     
-    def _is_cyclic(transaction_id: int, parent_id: int):
+    def _is_cyclic(self, transaction_id: int, parent_id: int):
         query=f"""
             with recursive cte as (
             select * from Transactions where id={transaction_id}
@@ -16,7 +18,7 @@ class TransactionsRepo():
         """
         try:
             # checking if parent id is already a child of transaction id. to prevent cyclicity
-            data = execute()
+            data = self.mysql_conn.execute(query)
             return len(data)==0
         except Exception as e:
             logger.exception(f"Error occurred while fetching child transanction data for transaction_id: {transaction_id} due to {e}")
@@ -28,7 +30,8 @@ class TransactionsRepo():
             raise ValueError("Invalid parentId provided")
         query = f"INSERT INTO Transactions(id, amount, transaction_type, parent_id) values({transaction_id, amount, transaction_type, parent_id})"
         try:
-            execute()
+            self.mysql_conn.execute(query)
+            self.mysql_conn.commit()
         except Exception as e:
             logger.exception(f"Exception occurred while inserting into db for transaction_id: {transaction_id}")
             raise Exception("Error occurred while inserting into db")
@@ -38,7 +41,8 @@ class TransactionsRepo():
             raise ValueError("Invalid parentId provided")
         query = f"UPDATE Transactions(id, amount, transaction_type, parent_id) values({transaction_id, amount, transaction_type, parent_id})"
         try:
-            execute()
+            self.mysql_conn.execute(query)
+            self.mysql_conn.commit()
         except Exception as e:
             logger.exception(f"Error occurred while inserting into db for transaction_id: {transaction_id} due to {e}")
             raise Exception("Error occurred while inserting into db")
@@ -46,7 +50,7 @@ class TransactionsRepo():
     def get_transactions_by_type(self, transaction_type: str):
         query="SELECT transaction_id, amount, transaction_type, parent_id from Transactions where transaction_type={transaction_type}"
         try:
-            execute()
+            self.mysql_conn.execute(query)
         except Exception as e:
             logger.exception(f"Error occurred while fetching data for transaction_type: {transaction_type} due to {e}")
             raise Exception("Error occurred")
@@ -55,7 +59,7 @@ class TransactionsRepo():
     def get_transactions_by_id(self, transaction_id: int):
         query="SELECT transaction_id, amount, transaction_type, parent_id from Transactions where id={transaction_id}"
         try:
-            execute()
+            self.mysql_conn.execute(query)
         except Exception as e:
             logger.exception(f"Error occurred while fetching data for transaction_id: {transaction_id} due to {e}")
             raise Exception("Error occurred")
@@ -71,9 +75,7 @@ class TransactionsRepo():
         """
 
         try:
-            execute()
+            self.mysql_conn.execute(query)
         except Exception as e:
             logger.exception(f"Error occurred while fetching data for transaction_id: {transaction_id} due to {e}")
             raise Exception("Error occurred")
-
-
