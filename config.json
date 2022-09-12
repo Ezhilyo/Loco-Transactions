@@ -3,6 +3,7 @@
   "MYSQL_USER":"test",
   "MYSQL_PASSWORD":"test",
   "MYSQL_DB": "test",
+  "MYSQL_PORT": "1234",
   "TEST_MYSQL_HOST": "test",
   "TEST_MYSQL_USER": "test",
   "TEST_MYSQL_PASSWORD":"test",
