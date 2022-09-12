@@ -45,7 +45,7 @@ class TestTransactionsRepo(unittest.TestCase):
         else:
             print("OK")
 
-    def test_insert_transactions(self):
+    def test_transactions(self):
         self.transaction = TransactionsRepo(host=db_config["TEST_MYSQL_HOST"],
                                             user_name=db_config["TEST_MYSQL_USER"],
                                             password=db_config["TEST_MYSQL_PASSWORD"],
