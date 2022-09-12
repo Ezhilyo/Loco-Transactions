@@ -57,6 +57,11 @@ class TestTransactionsRepo(unittest.TestCase):
         self.transaction.create_transaction(transaction_id=3, amount=300, parent_id=1, transaction_type="a")
         self.transaction.create_transaction(transaction_id=4, amount=400, parent_id=2, transaction_type="c")
         self.transaction.create_transaction(transaction_id=5, amount=500, parent_id=3, transaction_type="d")
+        try:
+            res = self.transaction.create_transaction(transaction_id=1, amount=500, parent_id=3, transaction_type="d")
+            raise Exception("Error")
+        except ValueError:
+            pass
 
         out_1 = self.transaction.get_transactions_by_type(transaction_type="a")
 
@@ -66,7 +71,11 @@ class TestTransactionsRepo(unittest.TestCase):
         self.transaction.create_transaction(transaction_id=6, amount=600, parent_id=5, transaction_type="e")
         self.transaction.create_transaction(transaction_id=7, amount=700, parent_id=6, transaction_type="a")
 
+        out_2 = self.transaction.get_transactions_by_id(1)
+        self.assertEqual([1], [i[0] for i in out_2])
 
+        out_3 = self.transaction.transactions_sum_from_parent_id(1)
+        self.assertEqual(2800, out_3[0])
 
-
-
+        out_4 = self.transaction.transactions_sum_from_parent_id(3)
+        self.assertEqual(2100, out_4[0])

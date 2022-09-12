@@ -14,14 +14,19 @@ class TransactionsRepo:
         self._cursor = self._mysql_db.cursor()
     
     def _is_cyclic(self, transaction_id: int, parent_id: int):
-        query = f"""WITH recursive cte AS 
-        (SELECT * from Transactions T where T.id=%s UNION ALL SELECT T.id, T.amount, 
-        T.parent_id from Transactions T join cte C on C.id=T.parent_id)
-        SELECT * from cte where T.id = %s;"""
+        query = f"""
+            with recursive cte as (
+            select * from Transactions where id=%s
+            union
+            select T.id, T.amount,T.transaction_type, T.parent_id from Transactions T join cte C on C.id=T.parent_id
+            )
+            select * from cte where id=%s;
+        """
         try:
             # checking if parent id is already a child of transaction id. to prevent cyclicity
-            data = self._cursor.execute(query, [transaction_id, parent_id])
-            return len(data) == 0
+            self._cursor.execute(query, [transaction_id, parent_id])
+            data = self._cursor.fetchall()
+            return len(data)>0
         except Exception as e:
             logger.exception(f"Error occurred while fetching child transanction data for transaction_id: {transaction_id} due to {e}")
             raise Exception("Some error occured")
@@ -33,19 +38,9 @@ class TransactionsRepo:
         try:
             self._cursor.execute(query, [transaction_id, amount, transaction_type, parent_id])
             self._mysql_db.commit()
+            return True
         except Exception as e:
             logger.exception(f"Exception occurred while inserting into db for transaction_id: {transaction_id}")
-            raise Exception("Error occurred while inserting into db")
-    
-    def update_transaction(self, transaction_id: int, amount: float, transaction_type: str, parent_id: int):
-        if self._is_cyclic(transaction_id=transaction_id, parent_id=parent_id):
-            raise ValueError("Invalid parentId provided")
-        query = f"UPDATE Transactions set amount={amount}, transaction_type={transaction_type}, parent_id={parent_id}) where id={transaction_id}"
-        try:
-            self._cursor.execute(query)
-            self._mysql_db.commit()
-        except Exception as e:
-            logger.exception(f"Error occurred while inserting into db for transaction_id: {transaction_id} due to {e}")
             raise Exception("Error occurred while inserting into db")
     
     def get_transactions_by_type(self, transaction_type: str):
@@ -61,7 +56,7 @@ class TransactionsRepo:
         query = "SELECT id, amount, transaction_type, parent_id from Transactions where id=%s"
         try:
             self._cursor.execute(query, [transaction_id])
-            self._cursor.fetchall()
+            return self._cursor.fetchall()
         except Exception as e:
             logger.exception(f"Error occurred while fetching data for transaction_id: {transaction_id} due to {e}")
             raise Exception("Error occurred")
@@ -69,16 +64,16 @@ class TransactionsRepo:
     def transactions_sum_from_parent_id(self, transaction_id: int):
         query = f"""
             with recursive cte as (
-            select * from Transactions where id={transaction_id}
+            select * from Transactions where id=%s
             union
-            select T.id, T.amount, T.parent_id from Transactions T join cte C on C.id=T.parent_id
+            select T.id, T.amount,T.transaction_type, T.parent_id from Transactions T join cte C on C.id=T.parent_id
             )
             select sum(amount) as t_sum from cte;
         """
 
         try:
-            self._cursor.execute(query)
-            return self._cursor.fetchone().get('t_sum', 0)
+            self._cursor.execute(query, [transaction_id])
+            return self._cursor.fetchone()
         except Exception as e:
             logger.exception(f"Error occurred while fetching data for transaction_id: {transaction_id} due to {e}")
             raise Exception("Error occurred")
