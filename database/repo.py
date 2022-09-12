@@ -72,6 +72,11 @@ class TransactionsRepo:
         """
 
         try:
+            # time complexity for this recursive query is O(E+V) where E is the total Number of edges that are linked from parent
+            # V is the total number of children it has
+            # during the first call it finds the immediate children
+            # in the next one, the next immediate children and so on till no child is present
+            # we prevent cycles while insertion so the structure remains a tree
             self._cursor.execute(query, [transaction_id])
             return self._cursor.fetchone()
         except Exception as e:
